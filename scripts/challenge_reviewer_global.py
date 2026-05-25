@@ -26,7 +26,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 VERSION = "0.8.7"
-USAGE = "Usage: /challenge-reviewer-global SOURCE_DATA_REVIEW FILE_BASE [ATTEMPT_NUMBER] [EMPLOYEE_ID]"
+USAGE = "Usage: /challenge-reviewer-global SOURCE_DATA_REVIEW FILE_BASE [ATTEMPT_NUMBER] [EMPLOYEE_ID] [PUBLISH_GOOGLE_SHEETS]"
 GITHUB_PATTERN = re.compile(r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(\.git)?$")
 
 
@@ -71,10 +71,29 @@ def clean_workspaces(project_root: Path, force: bool = True) -> None:
     workspace_root.mkdir(parents=True, exist_ok=True)
 
 
-def parse_args(argv: list[str]) -> tuple[str, str, Path, str, str] | int:
+def parse_bool_flag(value: str) -> bool | None:
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "y", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off"}:
+        return False
+    return None
+
+
+def parse_args(argv: list[str]) -> tuple[str, str, Path, str, str, bool] | int:
     args = [arg.strip() for arg in argv[1:] if arg.strip() and arg.strip() != "--clean-workspaces"]
     attempt_number = "0"
     employee_id = "ABC-123"
+    publish_google_sheets = True
+
+    # Optional 5th business parameter. Default is true to preserve existing behavior.
+    # Supported false values: false, 0, no, n, off.
+    if len(args) >= 5:
+        maybe_publish = parse_bool_flag(args[-1])
+        if maybe_publish is not None:
+            publish_google_sheets = maybe_publish
+            args = args[:-1]
+
     if len(args) >= 4:
         attempt_number = args[-2].strip() or "0"
         employee_id = args[-1].strip() or "ABC-123"
@@ -89,7 +108,7 @@ def parse_args(argv: list[str]) -> tuple[str, str, Path, str, str] | int:
         base_path = Path(base_arg).expanduser().resolve()
         if not base_path.exists() or not base_path.is_file():
             return fail(f"ERROR: Base challenge file does not exist or cannot be read: {base_path}", 2)
-        return "github", source_arg, base_path, attempt_number, employee_id
+        return "github", source_arg, base_path, attempt_number, employee_id, publish_google_sheets
 
     candidates: list[tuple[Path, Path]] = []
     for split_at in range(1, len(args)):
@@ -100,7 +119,7 @@ def parse_args(argv: list[str]) -> tuple[str, str, Path, str, str] | int:
 
     if candidates:
         source_path, base_path = candidates[0]
-        return "zip", str(source_path), base_path, attempt_number, employee_id
+        return "zip", str(source_path), base_path, attempt_number, employee_id, publish_google_sheets
 
     source_path = Path(source_arg).expanduser().resolve()
     if source_arg.lower().endswith(".zip") and (not source_path.exists() or not source_path.is_file()):
@@ -141,7 +160,7 @@ def main(argv: list[str]) -> int:
     parsed = parse_args(argv)
     if isinstance(parsed, int):
         return parsed
-    source_type, source_value, base_path, attempt_number, employee_id = parsed
+    source_type, source_value, base_path, attempt_number, employee_id, publish_google_sheets = parsed
 
     clean_enabled = os.environ.get("CLEAN_WORKSPACES_BEFORE_INTAKE", "true").lower() not in {"0", "false", "no", "off"}
     clean_workspaces(project_root, force=clean_enabled)
@@ -217,9 +236,13 @@ def main(argv: list[str]) -> int:
     log_line(project_root, "report", "universal-specialist and challenge-reporter agents must complete final reports")
 
     archive_command = None
+    render_report_command = None
     if review_session and review_session != "pending OpenCode agent execution":
         archive_command = f"python scripts/archive_review_session.py \"{review_session}\""
+        render_args = "--strict" if publish_google_sheets else "--strict --skip-google-sheets"
+        render_report_command = f"python scripts/render_unified_final_report.py \"{review_session}\" {render_args}"
         log_line(project_root, "archive review-session", archive_command)
+        log_line(project_root, "report", f"render_command={render_report_command}")
 
     output = {
         "status": "initialized",
@@ -236,8 +259,10 @@ def main(argv: list[str]) -> int:
         "base_file": str(base_path),
         "attempt_number": attempt_number,
         "employee_id": employee_id,
+        "publish_google_sheets": publish_google_sheets,
         "delegated_command": delegate_command,
         "review_session": review_session,
+        "render_report_command": render_report_command,
         "archive_command_after_report": archive_command,
         "next_agents": ["challenge-security-reviewer", "universal-specialist", "challenge-reporter"],
         "security_decision_rule": "quarantine only after validated critical findings from challenge-security-reviewer",

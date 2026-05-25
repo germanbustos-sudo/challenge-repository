@@ -113,6 +113,8 @@ Unified final-evaluation renderer rules:
 - Do not create source-specific report layouts for ZIP, GitHub, or any future intake source.
 - After reviewer assessment and skill assessment are complete, build or update the normalized report context and run:
   `python scripts/render_unified_final_report.py "<review-session>" --strict`
+- If the global orchestrator output has `publish_google_sheets: false` or its `render_report_command` includes `--skip-google-sheets`, run:
+  `python scripts/render_unified_final_report.py "<review-session>" --strict --skip-google-sheets`
 - If the PDF runtime is unavailable during local troubleshooting, use the same renderer with `--skip-pdf` only to preserve Markdown/JSON/HTML output. Do not create an alternate report template.
 - The unified renderer owns these artifacts:
   - `reports/final-evaluation.unified.json`
@@ -122,6 +124,7 @@ Unified final-evaluation renderer rules:
   - `reports/final-evaluation.pdf`
 - After `reports/final-evaluation.json` is generated, publish the result to Google Sheets by running:
   `python scripts/publish_review_to_google_sheets.py "<review-session>"`
+- Skip this publishing step when the renderer was invoked with `--skip-google-sheets`.
 - The publish helper must map:
   - `employee_id` -> `/add-google-spreadsheets` argument 1 -> Google Sheets Column 1: Employee ID
   - `attempt_number` -> `/add-google-spreadsheets` argument 2 -> Google Sheets Column 4: Attempt

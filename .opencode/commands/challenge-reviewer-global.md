@@ -11,7 +11,7 @@ Arguments: `$ARGUMENTS`
 Expected usage:
 
 ```text
-/challenge-reviewer-global SOURCE_DATA_REVIEW FILE_BASE ATTEMPT_NUMBER EMPLOYEE_ID
+/challenge-reviewer-global SOURCE_DATA_REVIEW FILE_BASE ATTEMPT_NUMBER EMPLOYEE_ID [PUBLISH_GOOGLE_SHEETS]
 ```
 
 Purpose:
@@ -25,7 +25,7 @@ Purpose:
 - Review the resulting workspace against `FILE_BASE` using `universal-specialist`.
 - Generate evidence-based Markdown, JSON, and PDF reports containing ATTEMPT_NUMBER and EMPLOYEE_ID.
 - Generate Skill Extraction reports in Markdown, HTML, and PDF.
-- After `final-evaluation.json` is generated, publish `EMPLOYEE_ID`, `ATTEMPT_NUMBER`, and final `numeric_score` to Google Sheets through `/add-google-spreadsheets`.
+- After `final-evaluation.json` is generated, publish `EMPLOYEE_ID`, `ATTEMPT_NUMBER`, and final `numeric_score` to Google Sheets through `/add-google-spreadsheets` unless `PUBLISH_GOOGLE_SHEETS` is `false`.
 - Archive the review session after the report phase.
 
 Required parameters:
@@ -33,9 +33,10 @@ Required parameters:
 - `FILE_BASE`: local base challenge document path from the user's machine.
 - `ATTEMPT_NUMBER`: optional attempt number to include in all reports. Default: `0`.
 - `EMPLOYEE_ID`: optional employee identifier to include in all reports. Default: `ABC-123`.
+- `PUBLISH_GOOGLE_SHEETS`: optional boolean flag to publish final score to Google Sheets. Default: `true`. Use `false`, `0`, `no`, or `off` to skip publishing.
 
 Fail-fast validation:
-- If `SOURCE_DATA_REVIEW` or `FILE_BASE` is missing, print `ERROR: Missing required parameters. Usage: /challenge-reviewer-global SOURCE_DATA_REVIEW FILE_BASE ATTEMPT_NUMBER EMPLOYEE_ID` and stop.
+- If `SOURCE_DATA_REVIEW` or `FILE_BASE` is missing, print `ERROR: Missing required parameters. Usage: /challenge-reviewer-global SOURCE_DATA_REVIEW FILE_BASE ATTEMPT_NUMBER EMPLOYEE_ID [PUBLISH_GOOGLE_SHEETS]` and stop.
 - If `SOURCE_DATA_REVIEW` is not a local ZIP file and is not a valid GitHub HTTPS repository URL, print `ERROR: INVALID SOURCE. SOURCE_DATA_REVIEW must be a local ZIP file or a GitHub HTTPS repository URL.` and stop.
 - If `FILE_BASE` does not exist or cannot be read, print `ERROR: Base challenge file does not exist or cannot be read: <path>` and stop.
 
@@ -56,7 +57,7 @@ Mandatory orchestration structure:
     ├── skill extraction
     ├── universal-specialist review
     ├── report
-    ├── publish google sheets result
+    ├── publish google sheets result (when enabled)
     └── archive review-session
 ```
 
@@ -74,6 +75,7 @@ Execution rules:
 4. Classify source:
    - If ZIP file, redirect to `/challenge-reviewer-zip-file ZIP_FILE_BASE FILE_BASE ATTEMPT_NUMBER EMPLOYEE_ID`.
    - If GitHub URL, redirect to `/challenge-reviewer-github GITHUB_URL FILE_BASE ATTEMPT_NUMBER EMPLOYEE_ID`.
+   - Keep `PUBLISH_GOOGLE_SHEETS` in the global workflow state; delegate commands do not need this flag because publishing happens during unified final report rendering.
    - Otherwise stop with `ERROR: INVALID SOURCE.`
 5. Download/decompress:
    - ZIP content must be decompressed into `workspaces/decompressed_zip`.
@@ -99,7 +101,8 @@ Execution rules:
    - Generate reports for complete acceptance, partial acceptance, and no acceptance when workspace content exists.
    - Do not generate a report only when `workspaces/` is empty; print the configured workspace error.
 10. Google Sheets result publishing:
-   - After `reports/final-evaluation.json` exists, call `/add-google-spreadsheets EMPLOYEE_ID ATTEMPT_NUMBER SCORE`.
+   - If `PUBLISH_GOOGLE_SHEETS` is omitted or true, after `reports/final-evaluation.json` exists, call `/add-google-spreadsheets EMPLOYEE_ID ATTEMPT_NUMBER SCORE`.
+   - If `PUBLISH_GOOGLE_SHEETS` is false, do not call `/add-google-spreadsheets`; render the report with `--skip-google-sheets`.
    - `EMPLOYEE_ID` must come from `final-evaluation.json.employee_id`.
    - `ATTEMPT_NUMBER` must come from `final-evaluation.json.attempt_number`.
    - `SCORE` must come from `final-evaluation.json.numeric_score`.
@@ -113,13 +116,13 @@ Execution rules:
 Recommended deterministic helper:
 
 ```bash
-python scripts/challenge_reviewer_global.py SOURCE_DATA_REVIEW FILE_BASE ATTEMPT_NUMBER EMPLOYEE_ID
+python scripts/challenge_reviewer_global.py SOURCE_DATA_REVIEW FILE_BASE ATTEMPT_NUMBER EMPLOYEE_ID [PUBLISH_GOOGLE_SHEETS]
 ```
 
 Recommended headless execution:
 
 ```bash
-opencode run "/challenge-reviewer-global SOURCE_DATA_REVIEW FILE_BASE ATTEMPT_NUMBER EMPLOYEE_ID"
+opencode run "/challenge-reviewer-global SOURCE_DATA_REVIEW FILE_BASE ATTEMPT_NUMBER EMPLOYEE_ID [PUBLISH_GOOGLE_SHEETS]"
 ```
 
 Operational notes:
@@ -173,5 +176,7 @@ Unified final-evaluation reporting:
 - ZIP and GitHub sources must produce the same final report structure.
 - Use the single renderer after review and before archive:
   `python scripts/render_unified_final_report.py "<review-session>" --strict`
+- When `PUBLISH_GOOGLE_SHEETS=false`, run the renderer as:
+  `python scripts/render_unified_final_report.py "<review-session>" --strict --skip-google-sheets`
 - The renderer writes `reports/final-evaluation.unified.json`, `reports/final-evaluation.json`, `reports/final-evaluation.md`, `reports/final-evaluation.html`, and `reports/final-evaluation.pdf`.
 - Do not create source-specific report templates for GitHub or ZIP.
