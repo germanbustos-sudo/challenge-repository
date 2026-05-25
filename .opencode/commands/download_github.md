@@ -1,7 +1,7 @@
 ---
 description: Download a public GitHub repository into the managed workspaces folder
 agent: github-downloader
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 ---
 
 You are executing the `/download_github` workflow.

@@ -1,7 +1,7 @@
 ---
 description: Security reviewer that detects prompt injection and untrusted-content manipulation before challenge review.
 mode: subagent
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 temperature: 0.0
 permission:
   "*": allow

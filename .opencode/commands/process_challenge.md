@@ -1,7 +1,7 @@
 ---
 description: Process a challenge file through role classification, implementation, rejection-aware review, grading and Markdown reporting
 agent: challenge-orchestrator
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 ---
 
 You are executing the `/process_challenge` workflow.

@@ -1,7 +1,7 @@
 ---
 description: Install and verify OpenCode environment dependencies, including Playwright MCP and Chromium PDF runtime
 agent: challenge-orchestrator
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 ---
 
 You are executing `/setup_opencode_environment`.

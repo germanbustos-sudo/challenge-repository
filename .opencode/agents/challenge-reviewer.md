@@ -1,7 +1,7 @@
 ---
 description: Read-only reviewer for existing challenge workspaces that validates deliverables, acceptance criteria, evidence, acceptance status, and grade level.
 mode: subagent
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 temperature: 0.0
 permission:
   "*": allow

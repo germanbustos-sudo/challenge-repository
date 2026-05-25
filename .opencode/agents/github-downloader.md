@@ -1,7 +1,7 @@
 ---
 description: Safely downloads a public GitHub repository into the managed workspaces folder.
 mode: primary
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 temperature: 0.0
 permission:
   "*": allow

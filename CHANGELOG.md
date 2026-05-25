@@ -18,3 +18,8 @@
 - Prepared the project structure for GitHub publication.
 - Added repository-safe `.gitignore` coverage for OpenCode state, workspaces, review sessions, archives, setup logs, generated reports, Node/Python caches, local archives, and secrets.
 - Rewrote `README.md` to describe only the current architecture, commands, agents, dynamic skills, security model, unified reporting, Docker usage, and GitHub readiness.
+
+
+## v0.8.5
+
+- Migrated the  OpenCode model from `opencode-go/deepseek-v4-flash` to `opencode/big-pickle` .

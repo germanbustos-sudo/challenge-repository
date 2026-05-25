@@ -1,7 +1,7 @@
 ---
 description: Software Engineering specialist for spec-driven development challenges.
 mode: subagent
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 temperature: 0.1
 permission:
   "*": allow

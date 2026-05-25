@@ -1,7 +1,7 @@
 ---
 description: Universal dynamic challenge specialist driven by FILE_BASE criteria and session-scoped agent-skill-profile.json.
 mode: subagent
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 temperature: 0.0
 permission:
   "*": allow

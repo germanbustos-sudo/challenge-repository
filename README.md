@@ -32,8 +32,8 @@ The source intake changes by source type, but the review model and final report 
 This version keeps the current single-model architecture and migrates the default model from `opencode/big-pickle` to OpenCode Go:
 
 ```text
-model: opencode-go/deepseek-v4-flash
-small_model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
+small_model: opencode/big-pickleHe
 ```
 
 The same model is configured in `opencode.json`, command frontmatter, agent frontmatter, and `config/orchestration.yaml`. Future versions can introduce multi-model routing, but v0.8.7 intentionally keeps the runtime topology unchanged.

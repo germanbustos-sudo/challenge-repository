@@ -1,7 +1,7 @@
 ---
 description: Run a stateless global challenge review from either a ZIP file or a GitHub repository URL
 agent: challenge-orchestrator
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 ---
 
 You are executing the `/challenge-reviewer-global` stateless composite workflow.

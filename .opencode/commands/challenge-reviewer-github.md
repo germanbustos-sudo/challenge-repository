@@ -1,7 +1,7 @@
 ---
 description: Download a GitHub repository into workspaces and then review it against a base challenge file
 agent: challenge-orchestrator
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 ---
 
 You are executing the `/challenge-reviewer-github` workflow.

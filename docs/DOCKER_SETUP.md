@@ -60,7 +60,7 @@ volumes:
 The Docker image ships the runtime dependencies, but OpenCode Go access is still tied to your OpenCode account configuration. The project default model is:
 
 ```text
-opencode-go/deepseek-v4-flash
+opencode/big-pickle
 ```
 
 Run `opencode` inside the container and complete `/connect` or your normal OpenCode Go authentication flow if this is the first time using the mounted `.opencode-state` directory.

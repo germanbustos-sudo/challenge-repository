@@ -1,7 +1,7 @@
 ---
 description: Classify and orchestrate role-based technical challenges.
 mode: primary
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 temperature: 0.1
 permission:
   "*": allow

@@ -1,7 +1,7 @@
 ---
 description: Decompress a local ZIP file into workspaces and review it against a base challenge file
 agent: challenge-orchestrator
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 ---
 
 You are executing the `/challenge-reviewer-zip-file` composite workflow.

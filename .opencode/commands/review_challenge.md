@@ -1,7 +1,7 @@
 ---
 description: Review an existing workspace implementation against a base challenge file and generate Markdown reports only
 agent: challenge-orchestrator
-model: opencode-go/deepseek-v4-flash
+model: opencode/big-pickle
 ---
 
 You are executing the `/review_challenge` workflow.
