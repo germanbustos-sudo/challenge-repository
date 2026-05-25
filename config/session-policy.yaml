@@ -1,0 +1,45 @@
+version: 0.8.7
+policy_name: stateless-global-review-session-policy
+
+stateless_review:
+  enabled: true
+  applies_to:
+    - challenge-reviewer-global
+  context_boundary:
+    tui_command: /new
+    headless_mode: opencode run
+    prohibit_previous_context: true
+    allowed_context_sources:
+      - FILE_BASE
+      - workspaces
+      - review-session
+      - MANIFEST.lock.json
+      - config/review-policy.yaml
+  workspace:
+    clean_before_intake: true
+    clean_scope: workspaces_only
+    preserve:
+      - review-sessions
+      - archived-review-sessions
+      - config
+      - .opencode
+  phases:
+    - new
+    - clean workspace
+    - intake
+    - classify source
+    - download/decompress
+    - review
+    - report
+    - archive review-session
+  archive:
+    enabled: true
+    target_directory: archived-review-sessions
+    archive_format: zip
+
+report_pdf_required: true
+default_attempt_number: "0"
+default_employee_id: "ABC-123"
+
+pdf_runtime_setup_required: true
+pdf_runtime_setup_command: /setup_opencode_environment

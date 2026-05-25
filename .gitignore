@@ -1,0 +1,86 @@
+# OpenCode runtime state
+.opencode-state/
+
+# Managed runtime workspaces and generated review outputs
+workspaces/
+review-sessions/
+archived-review-sessions/
+setup-logs/
+logs/
+reports/
+security/
+skills/
+review/
+input/
+implementation/
+tests-output/
+
+# Candidate/source archives and local challenge inputs
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+/challenge/
+/challenges/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# Node / Playwright
+node_modules/
+.playwright/
+playwright-report/
+test-results/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment, credentials, and local secrets
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*service-account*.json
+GOOGLE_APPLICATION_CREDENTIALS*.json
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker/local build artifacts
+.docker-data/
+*.pid
+*.tmp
+*.bak
+
+# Generated distributions
+/dist/
+*.zip.tmp
+# Google Sheets local credentials/config
+config/google/service-account.json
+config/google/sheets.config.json
+config/google/*.secret.json
+*.credentials.json

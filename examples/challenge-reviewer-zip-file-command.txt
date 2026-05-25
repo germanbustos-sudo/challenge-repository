@@ -1,0 +1,1 @@
+/challenge-reviewer-zip-file ./submissions/solution.zip ./challenges/software-challenge.pdf

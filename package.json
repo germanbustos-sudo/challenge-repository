@@ -1,0 +1,26 @@
+{
+  "name": "opencode-challenge-orchestrator",
+  "version": "0.8.7",
+  "private": true,
+  "description": "Runtime dependencies for OpenCode challenge orchestrator PDF generation.",
+  "scripts": {
+    "setup:opencode": "python scripts/setup_opencode_environment.py",
+    "setup:pdf": "playwright install chromium",
+    "verify:pdf": "node scripts/verify_playwright_pdf_runtime.mjs",
+    "validate:setup": "python scripts/validate_setup.py",
+    "add-google-spreadsheets": "node ./src/add-google-spreadsheets.js",
+    "google-sheets:validate-config": "node ./src/add-google-spreadsheets.js --validate-config",
+    "google-sheets:test": "node ./test/parse-args.test.js",
+    "publish-review-to-google-sheets": "python scripts/publish_review_to_google_sheets.py",
+    "test-google-spreadsheets": "node ./src/test-google-spreadsheets.js",
+    "google-sheets:smoke-test": "node ./src/test-google-spreadsheets.js"
+  },
+  "devDependencies": {
+    "@playwright/mcp": "latest",
+    "playwright": "^1.44.0"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  },
+  "type": "module"
+}

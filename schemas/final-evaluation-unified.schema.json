@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenCode Challenge Orchestrator Unified Final Evaluation",
+  "type": "object",
+  "required": [
+    "workflow_status",
+    "acceptance_status",
+    "numeric_score",
+    "functional_score",
+    "technical_score",
+    "dimension_scores",
+    "dimension_grades",
+    "grade",
+    "attempt_number",
+    "employee_id",
+    "source_type",
+    "source_workflow",
+    "criteria",
+    "dimensions"
+  ],
+  "properties": {
+    "workflow_status": {"type": "string"},
+    "acceptance_status": {"type": "string"},
+    "numeric_score": {"type": ["number", "integer", "null"]},
+    "functional_score": {"type": ["number", "integer", "null"]},
+    "technical_score": {"type": ["number", "integer", "null"]},
+    "dimension_scores": {"type": "object"},
+    "dimension_grades": {"type": "object"},
+    "grade": {"type": "string"},
+    "attempt_number": {"type": "string"},
+    "employee_id": {"type": "string"},
+    "source_type": {"type": "string"},
+    "source_workflow": {"type": "string"},
+    "role": {"type": "string"},
+    "role_label": {"type": "string"},
+    "challenge_title": {"type": "string"},
+    "reviewer_agent": {"type": "string"},
+    "dimensions": {"type": "object"},
+    "criteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "dimension", "criterion", "status", "severity"],
+        "properties": {
+          "id": {"type": "string"},
+          "dimension": {"enum": ["functional", "technical", "other"]},
+          "dimension_label": {"type": "string"},
+          "criterion": {"type": "string"},
+          "source_section": {"type": "string"},
+          "source_text": {"type": "string"},
+          "status": {"type": "string"},
+          "severity": {"type": "string"},
+          "evidence": {"type": ["string", "array", "object"]},
+          "comment": {"type": "string"}
+        }
+      }
+    }
+  }
+}

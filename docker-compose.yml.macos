@@ -1,0 +1,27 @@
+services:
+  opencode-orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: opencode-challenge-orchestrator:0.8.7-macos
+    container_name: opencode-challenge-orchestrator-macos
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    environment:
+      TERM: xterm-256color
+      XDG_CONFIG_HOME: /home/pwuser/.config
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+      NODE_PATH: /usr/local/lib/node_modules
+      OPENCODE_DOCKER: "1"
+      # Optional: uncomment if Google credentials are used from the mounted config folder.
+      # GOOGLE_APPLICATION_CREDENTIALS: /app/config/google/service-account.json
+    volumes:
+      - .:/app
+      - ./.opencode-state:/home/pwuser/.config/opencode
+      - ./workspaces:/app/workspaces
+      - ./review-sessions:/app/review-sessions
+      - ./archived-review-sessions:/app/archived-review-sessions
+      # macOS host input folder. Create it with: mkdir -p ~/challenge
+      - ${HOME}/challenge:/challenge
+    command: bash

@@ -1,0 +1,21 @@
+{
+  "spreadsheetId": "1Z_D1ggqjTgr_bZHgIVAvz4xeEKtOFqrdx_K-JFApiLs",
+  "sheetName": "global",
+  "range": "A:G",
+  "valueInputOption": "USER_ENTERED",
+  "credentialsFile": "./config/google/gen-lang-client-0932983893-bbf5ebec5332.json",
+  "columns": [
+    "Employee ID",
+    "Name",
+    "Challenge",
+    "Attempt",
+    "Report URL",
+    "Status",
+    "Score"
+  ],
+  "writeMapping": {
+    "argument1": "Column 1 - Employee ID",
+    "argument2": "Column 4 - Attempt",
+    "argument3": "Column 7 - Score"
+  }
+}

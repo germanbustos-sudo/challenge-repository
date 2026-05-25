@@ -1,0 +1,1 @@
+/challenge-reviewer-github https://github.com/owner/repository.git ./challenges/software-challenge.pdf

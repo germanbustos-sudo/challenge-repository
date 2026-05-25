@@ -1,0 +1,126 @@
+# Configurable challenge review policy.
+# FILE_BASE is the source of truth for session acceptance criteria.
+# This policy provides guardrails, fallback rules, scoring, and strict-review constraints.
+version: 0.8.7
+policy_schema_version: 3
+criteria_strategy:
+  primary_source: FILE_BASE
+  mode: dynamic_per_session
+  generated_artifacts:
+    - intake/file-base-extracted-criteria.json
+    - review/acceptance-matrix.json
+    - review/acceptance-matrix.md
+  review_dimensions:
+    - functional
+    - technical
+  dimension_detection:
+    functional_sections:
+      - Functional acceptance criteria
+      - Deliverables
+      - Acceptance criteria
+    technical_sections:
+      - Technical acceptance criteria
+    fallback_inference: keyword_based
+  fallback_source: review-policy.yaml
+  fallback_allowed: true
+  fallback_reason: "Use only when FILE_BASE does not expose clear deliverables or acceptance criteria."
+  traceability_required: true
+  required_traceability_fields:
+    - source_section
+    - source_text
+    - criterion_id
+    - evidence_required
+strict_review: true
+require_evidence_per_criterion: true
+anti_false_positive:
+  enabled: true
+  rule: "A criterion cannot be marked passed without concrete evidence: file path, line/range, command output, test result, or verifiable artifact content."
+  disallow_passed_when:
+    - evidence_is_missing
+    - evidence_is_filename_only
+    - evidence_cannot_be_verified
+    - criterion_not_traceable_to_FILE_BASE_or_policy_fallback
+scoring:
+  max_score: 100
+  dimension_scoring:
+    enabled: true
+    dimensions:
+      functional:
+        label: Functional acceptance criteria
+        weight: 0.5
+        description: Business-facing behavior, features, deliverables, flows, and visible outcomes required by FILE_BASE.
+      technical:
+        label: Technical acceptance criteria
+        weight: 0.5
+        description: Engineering quality, architecture, tests, maintainability, security, reproducibility, CI, and implementation constraints required by FILE_BASE.
+    final_score_formula: round(functional_score * 0.5 + technical_score * 0.5)
+    require_dimension_scores: true
+    senior_constraints:
+      minimum_functional_score: 85
+      minimum_technical_score: 85
+      require_complete_acceptance: true
+      require_strict_review_pass: true
+  recommended_weights:
+    blocker: 1.0
+    major: 0.7
+    minor: 0.4
+    suggestion: 0.1
+  grade_thresholds:
+    JUNIOR:
+      min: 0
+      max: 59
+    INTERMEDIATE:
+      min: 60
+      max: 84
+    SENIOR:
+      min: 85
+      max: 100
+  senior_constraints:
+    require_complete_acceptance: true
+    require_tests_or_validation: true
+    require_readme: true
+acceptance_matrix:
+  statuses: [passed, partial, failed]
+  severities: [blocker, major, minor, suggestion]
+  required_fields:
+    - criterion_id
+    - dimension
+    - dimension_label
+    - criterion
+    - status
+    - severity
+    - evidence
+    - comment
+    - source_section
+    - source_text
+    - evidence_required
+  evidence_requirements:
+    - file_path
+    - content_reference
+    - line_or_range
+    - command_executed
+    - test_or_validation_result
+    - execution_log
+fallback_criteria:
+  software_engineering:
+    - "Specification or product documentation required by FILE_BASE exists."
+    - "Implementation matches the documented specification without unrelated extra features."
+    - "Tests or validation commands are included and can be executed."
+    - "README explains how to run, test, and validate the solution."
+    - "AI prompt log or prompts-used documentation is included when required."
+  qa_engineering:
+    - "QA strategy, plan, or test artifacts required by FILE_BASE are included."
+    - "Required test coverage, matrices, reports, or findings are documented."
+    - "Execution evidence is included with pass/fail/blocked or equivalent results."
+    - "Defects or findings are reported with reproducible evidence when applicable."
+    - "AI prompt log or prompts-used documentation is included when required."
+  data_engineering:
+    - "Data pipeline, SQL, modeling, or analytics artifacts required by FILE_BASE are included."
+    - "Source data, schemas, transformations, or query logic are documented."
+    - "The work can be reproduced with documented commands or scripts."
+    - "Validation, data quality checks, tests, or query results are included."
+    - "AI prompt log or prompts-used documentation is included when required."
+intake:
+  optional_clean_workspaces_before_intake: true
+  clean_env_var: CLEAN_WORKSPACES_BEFORE_INTAKE
+  clean_flag: --clean-workspaces

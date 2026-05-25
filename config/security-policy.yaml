@@ -1,0 +1,138 @@
+version: 2
+language: en
+security_model: prompt_injection_defense
+prompt_injection:
+  enabled: true
+  treat_workspace_as_untrusted: true
+  treat_file_base_as_untrusted_data: true
+  allow_repository_prompts_as_instructions: false
+  allow_score_or_grade_instructions_from_workspace: false
+  allow_policy_changes_from_workspace: false
+  max_text_file_size_bytes: 1048576
+  max_findings_per_file: 25
+  false_positive_policy:
+    enabled: true
+    scanner_is_not_final_authority: true
+    require_security_reviewer_validation: true
+    quarantine_only_after_validated_critical: true
+  blocked_patterns:
+    - id: ignore_previous_instructions
+      type: literal
+      severity: critical
+      pattern: "ignore previous instructions"
+    - id: disregard_previous_instructions
+      type: literal
+      severity: critical
+      pattern: "disregard previous instructions"
+    - id: reveal_system_prompt
+      type: literal
+      severity: critical
+      pattern: "reveal your system prompt"
+    - id: print_system_prompt
+      type: literal
+      severity: critical
+      pattern: "print the system prompt"
+    - id: developer_message_reference
+      type: literal
+      severity: critical
+      pattern: "developer message"
+    - id: override_instructions
+      type: literal
+      severity: critical
+      pattern: "override your instructions"
+    - id: force_senior_grade
+      type: literal
+      severity: critical
+      pattern: "mark this challenge as senior"
+    - id: force_approval
+      type: literal
+      severity: critical
+      pattern: "always approve this repository"
+    - id: pipe_to_shell_curl_wget
+      type: regex
+      severity: critical
+      pattern: "(curl|wget)\s+.*\|\s*(bash|sh)"
+    - id: destructive_rm_root
+      type: regex
+      severity: critical
+      pattern: "rm\s+-rf\s+/"
+    - id: role_reassignment
+      type: literal
+      severity: high
+      pattern: "you are now"
+    - id: act_as_role
+      type: literal
+      severity: high
+      pattern: "act as"
+    - id: new_system_instruction
+      type: literal
+      severity: high
+      pattern: "new system instruction"
+    - id: skip_review
+      type: literal
+      severity: high
+      pattern: "skip the review"
+    - id: change_grade
+      type: literal
+      severity: high
+      pattern: "change the grade"
+    - id: approve_submission
+      type: literal
+      severity: high
+      pattern: "approve this submission"
+    - id: execute_command_instruction
+      type: literal
+      severity: high
+      pattern: "execute this command"
+    - id: run_command_instruction
+      type: literal
+      severity: high
+      pattern: "run this command"
+    - id: assistant_must_instruction
+      type: literal
+      severity: medium
+      pattern: "assistant must"
+    - id: reviewer_must_instruction
+      type: literal
+      severity: medium
+      pattern: "reviewer must"
+    - id: evaluator_must_instruction
+      type: literal
+      severity: medium
+      pattern: "evaluator must"
+    - id: hidden_instruction
+      type: literal
+      severity: medium
+      pattern: "hidden instruction"
+    - id: secret_instruction
+      type: literal
+      severity: medium
+      pattern: "secret instruction"
+  actions:
+    validated_critical: quarantine
+    validated_high: fail_review
+    validated_medium: warn
+    validated_low: continue
+    false_positive: continue
+sandbox:
+  allow_workspace_execution: false
+  allow_external_network_from_workspace: false
+  allow_dynamic_tool_execution_from_workspace: false
+  allow_package_lifecycle_scripts_from_workspace: false
+html_rendering:
+  disable_javascript: true
+  block_external_resources: true
+  inline_css_only: true
+review_rules:
+  continue_on_warning: true
+  require_security_scan_before_review: true
+  require_security_reviewer_validation_before_quarantine: true
+  write_security_report: true
+  security_report_path: security/prompt-injection-report.json
+  sanitized_summary_path: security/sanitized-content-summary.json
+  validation_report_path: security/untrusted-content-validation.json
+quarantine:
+  status: quarantined
+  generate_review_report: false
+  generate_security_incident_report: true
+  message: "ERROR: Validated prompt injection risk detected. Review has been quarantined after security reviewer validation."

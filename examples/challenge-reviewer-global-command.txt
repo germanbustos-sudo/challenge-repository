@@ -1,0 +1,8 @@
+# Docker/container path example:
+/challenge-reviewer-global "/challenge/software-engineering.zip" "/challenge/Software Engineering SW Challenge 1_ Spec-Driven Development Basics.pdf" 1 GBUSTOS4339640
+
+# Local host path example without Docker:
+/challenge-reviewer-global "C:/submissions/task.zip" "C:/challenges/software.pdf" 1 EMP-001
+
+# Defaults also supported for attempt and employee:
+/challenge-reviewer-global "/challenge/software-engineering.zip" "/challenge/Software Engineering SW Challenge 1_ Spec-Driven Development Basics.pdf"

@@ -1,0 +1,6 @@
+review-sessions/<session>/intake/agent-skill-profile.json
+review-sessions/<session>/skills/skill-extraction.md
+review-sessions/<session>/skills/skill-extraction.html
+review-sessions/<session>/skills/skill-extraction.pdf
+review-sessions/<session>/review/skill-assessment.md
+review-sessions/<session>/review/skill-assessment.json

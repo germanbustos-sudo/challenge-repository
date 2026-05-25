@@ -1,0 +1,322 @@
+version: 0.8.7
+language: en
+default_model: opencode-go/deepseek-v4-flash
+workspace_root: workspaces
+review_session_root: review-sessions
+integration_ready: true
+workflows:
+  process_challenge:
+    command: /process_challenge
+    mode: solve_and_review
+    cleanup_workspace_on_start: true
+    input_argument: FILE
+    description: Classify, implement, test, supervise, grade, and report a challenge.
+  review_challenge:
+    command: /review_challenge
+    mode: review_only
+    cleanup_workspace_on_start: false
+    input_argument: FILE_BASE
+    description: Review existing workspace content against a base challenge file and generate reports only.
+  download_github:
+    command: /download_github
+    mode: download_only
+    cleanup_workspace_on_start: false
+    input_argument: GITHUB_REPOSITORY_URL
+    target_directory: workspaces/github_repository
+    description: Download one public GitHub repository into the managed workspaces folder.
+
+  decompress_zip_file:
+    command: /decompress_zip_file
+    mode: decompress_only
+    cleanup_workspace_on_start: false
+    input_argument: ZIP_FILE_BASE
+    target_directory: workspaces/decompressed_zip
+    description: Decompress one local ZIP archive into the managed workspaces folder.
+  challenge_reviewer_github:
+    command: /challenge-reviewer-github
+    mode: download_then_review
+    cleanup_workspace_on_start: false
+    input_arguments:
+      - GITHUB_URL
+      - FILE_BASE
+    execution_order:
+      - /download_github GITHUB_URL
+      - /challenge-reviewer FILE_BASE
+    target_directory: workspaces/github_repository
+    description: Download a GitHub repository into workspaces and review it against a base challenge file.
+  challenge_reviewer_zip_file:
+    command: /challenge-reviewer-zip-file
+    mode: decompress_then_review
+    cleanup_workspace_on_start: false
+    input_arguments:
+      - ZIP_FILE_BASE
+      - FILE_BASE
+    execution_order:
+      - /decompress_zip_file ZIP_FILE_BASE
+      - /challenge-reviewer FILE_BASE
+    target_directory: workspaces/decompressed_zip
+    description: Decompress a ZIP file into workspaces and review it against a base challenge file.
+
+  challenge_reviewer_global:
+    command: /challenge-reviewer-global
+    mode: stateless_classify_source_then_review
+    cleanup_workspace_on_start: true
+    input_arguments:
+      - SOURCE_DATA_REVIEW
+      - FILE_BASE
+    execution_order:
+      - /new context boundary when running in TUI
+      - clean managed workspaces directory
+      - validate intake parameters
+      - classify SOURCE_DATA_REVIEW as ZIP FILE or GITHUB URL
+      - route to /challenge-reviewer-zip-file or /challenge-reviewer-github
+      - run untrusted content validation
+      - run prompt injection scan
+      - generate sanitized workspace summary
+      - run security assessment with challenge-security-reviewer
+      - run review with challenge-reviewer
+      - generate report with challenge-reporter
+      - archive review-session
+    session_policy_file: config/session-policy.yaml
+    archive_directory: archived-review-sessions
+    description: Run an isolated global review from ZIP or GitHub, then archive the review session.
+security_policy:
+  policy_file: config/security-policy.yaml
+  prompt_injection_enabled: true
+  treat_workspace_as_untrusted: true
+  require_security_scan_before_review: true
+  quarantine_on_critical_prompt_injection: true
+  scripts:
+    - scripts/validate_untrusted_content.py
+    - scripts/scan_prompt_injection.py
+    - scripts/sanitize_workspace_content.py
+  security_agent: challenge-security-reviewer
+review_policy:
+  policy_file: config/review-policy.yaml
+skill_extraction_policy:
+  policy_file: config/skill-extraction-policy.yaml
+  primary_agent: universal-specialist
+  profile_output: intake/agent-skill-profile.json
+  reports:
+    markdown: skills/skill-extraction.md
+    html: skills/skill-extraction.html
+    pdf: skills/skill-extraction.pdf
+  strict_review: true
+  require_evidence_per_criterion: true
+  anti_false_positive_validation: true
+  numeric_scoring: true
+  max_rejected: 3
+  status_values:
+    - accepted
+    - rejected
+    - cancelled
+    - reviewed
+    - not_evaluable
+  grading_levels:
+    - JUNIOR
+    - INTERMEDIATE
+    - SENIOR
+supported_challenge_types:
+  software_engineering:
+    label: Software Engineering
+    specialist_agent: universal-specialist
+    legacy_specialist_agent: software-specialist
+    supervisor_agent: challenge-supervisor
+    reviewer_agent: universal-specialist
+    required_outputs:
+      - docs/vision.md
+      - docs/user-stories.md
+      - docs/data-model.md
+      - docs/openapi.yaml
+      - API implementation
+      - unit tests
+      - README.md
+      - prompts-used.md
+  qa_engineering:
+    label: QA Engineering
+    specialist_agent: universal-specialist
+    legacy_specialist_agent: qa-specialist
+    supervisor_agent: challenge-supervisor
+    reviewer_agent: universal-specialist
+    required_outputs:
+      - test-plan.md
+      - test-cases.md
+      - regression-matrix.md
+      - execution-report.md
+      - defects-report.md
+      - prompts-used.md
+  data_engineering:
+    label: Data Engineering
+    specialist_agent: universal-specialist
+    legacy_specialist_agent: data-engineering-specialist
+    supervisor_agent: challenge-supervisor
+    reviewer_agent: universal-specialist
+    required_outputs:
+      - ETL pipeline script
+      - dataset documentation
+      - transformations documentation
+      - star schema
+      - analytical queries
+      - tests or data quality checks
+      - README.md
+      - prompts-used.md
+fail_fast_errors:
+  missing_path: "ERROR: Missing challenge file path."
+  missing_base_path: "ERROR: Missing base challenge file path."
+  unreadable_file: "ERROR: Challenge file does not exist or cannot be read: {path}"
+  unreadable_base_file: "ERROR: Base challenge file does not exist or cannot be read: {path}"
+  unclassified: "ERROR: Challenge document could not be classified."
+  base_unclassified: "ERROR: Base challenge document could not be classified."
+  empty_workspaces: "ERROR: No workspace files found to evaluate."
+  workspace_cleanup_failed: "ERROR: Workspace cleanup could not be completed."
+  workspace_failed: "ERROR: Workspace could not be created."
+  review_session_failed: "ERROR: Review session could not be created."
+  implementation_failed: "ERROR: Implementation could not be completed."
+  max_rejected_exceeded: "ERROR: Maximum rejection attempts exceeded. Process cancelled."
+  review_failed: "ERROR: Supervisor review could not be completed."
+  review_only_failed: "ERROR: Challenge review could not be completed."
+  report_failed: "ERROR: Markdown report could not be generated."
+  missing_github_url: "GitHub repository could not be downloaded. Missing repository URL."
+  invalid_github_url: "GitHub repository could not be downloaded. Invalid GitHub repository URL."
+  github_download_failed: "GitHub repository could not be downloaded."
+  missing_github_review_args: "ERROR: Missing required parameters. Usage: /challenge-reviewer-github GITHUB_URL FILE_BASE"
+  github_review_download_failed: "ERROR: GitHub repository download failed. Review was not started."
+  missing_zip_file_path: "ZIP file could not be decompressed. Missing ZIP file path."
+  invalid_zip_file_path: "ZIP file could not be decompressed. ZIP file does not exist, cannot be read, or is not a valid ZIP archive."
+  zip_decompression_failed: "ZIP file could not be decompressed."
+  missing_zip_review_args: "ERROR: Missing required parameters. Usage: /challenge-reviewer-zip-file ZIP_FILE_BASE FILE_BASE"
+  zip_review_decompression_failed: "ERROR: ZIP file decompression failed. Review was not started."
+integration_contract:
+  commands:
+    - name: process_challenge
+      entrypoint: .opencode/commands/process_challenge.md
+      helper_script: scripts/process_challenge.py
+      produces:
+        - workspaces/<challenge-slug>-<timestamp>/run-manifest.json
+        - workspaces/<challenge-slug>-<timestamp>/reports/final-evaluation.md
+    - name: review_challenge
+      entrypoint: .opencode/commands/review_challenge.md
+      helper_script: scripts/review_challenge.py
+      aliases:
+        - challenge-reviewer
+      produces:
+        - review-sessions/<challenge-slug>-<timestamp>/review-manifest.json
+        - review-sessions/<challenge-slug>-<timestamp>/MANIFEST.lock.json
+        - review-sessions/<challenge-slug>-<timestamp>/logs/execution.log
+        - review-sessions/<challenge-slug>-<timestamp>/review/acceptance-matrix.json
+        - review-sessions/<challenge-slug>-<timestamp>/reports/final-evaluation.md
+        - review-sessions/<challenge-slug>-<timestamp>/reports/final-evaluation.json
+    - name: download_github
+      entrypoint: .opencode/commands/download_github.md
+      helper_script: scripts/download_github.py
+      produces:
+        - workspaces/github_repository/.git
+        - workspaces/github_repository/<repository-files>
+    - name: decompress_zip_file
+      entrypoint: .opencode/commands/decompress_zip_file.md
+      helper_script: scripts/decompress_zip_file.py
+      produces:
+        - workspaces/decompressed_zip/<extracted-files>
+    - name: challenge-reviewer-github
+      entrypoint: .opencode/commands/challenge-reviewer-github.md
+      helper_script: scripts/challenge_reviewer_github.py
+      composes:
+        - download_github
+        - challenge-reviewer
+      produces:
+        - workspaces/github_repository/.git
+        - review-sessions/<challenge-slug>-<timestamp>/review-manifest.json
+        - review-sessions/<challenge-slug>-<timestamp>/reports/final-evaluation.md
+    - name: challenge-reviewer-zip-file
+      entrypoint: .opencode/commands/challenge-reviewer-zip-file.md
+      helper_script: scripts/challenge_reviewer_zip_file.py
+      composes:
+        - decompress_zip_file
+        - challenge-reviewer
+      produces:
+        - workspaces/decompressed_zip/<extracted-files>
+        - review-sessions/<challenge-slug>-<timestamp>/review-manifest.json
+        - review-sessions/<challenge-slug>-<timestamp>/reports/final-evaluation.md
+    - name: challenge-reviewer-global
+      entrypoint: .opencode/commands/challenge-reviewer-global.md
+      helper_script: scripts/challenge_reviewer_global.py
+      composes:
+        - challenge-reviewer-zip-file
+        - challenge-reviewer-github
+      produces:
+        - workspaces/github_repository or workspaces/decompressed_zip
+        - review-sessions/<challenge-slug>-<timestamp>/review-manifest.json
+        - review-sessions/<challenge-slug>-<timestamp>/MANIFEST.lock.json
+        - review-sessions/<challenge-slug>-<timestamp>/logs/execution.log
+        - review-sessions/<challenge-slug>-<timestamp>/review/acceptance-matrix.json
+        - review-sessions/<challenge-slug>-<timestamp>/reports/final-evaluation.md
+        - review-sessions/<challenge-slug>-<timestamp>/reports/final-evaluation.json
+  extension_points:
+    - Add a new challenge type under supported_challenge_types.
+    - Add a specialist agent under .opencode/agents/.
+    - Add classification signals in scripts/process_challenge.py and scripts/review_challenge.py.
+    - Reuse challenge-reviewer and challenge-reporter from external orchestrations.
+    - Reuse download_github as a pre-step in external orchestrations that need repository input under workspaces/.
+    - Reuse decompress_zip_file as a pre-step in external orchestrations that need local ZIP contents under workspaces/.
+    - Reuse the zip-decompression-orchestration skill for ZIP-based upstream inputs.
+    - Reuse challenge-reviewer-github as a composed download-and-review step in external orchestrations.
+    - Reuse challenge-reviewer-zip-file as a composed ZIP intake-and-review step in external orchestrations.
+
+report_outputs:
+  markdown: final-evaluation.md
+  json: final-evaluation.json
+  html: final-evaluation.html
+  pdf: final-evaluation.pdf
+metadata_parameters:
+  attempt_number:
+    default: "0"
+    description: "Attempt number included in all reports."
+  employee_id:
+    default: "ABC-123"
+    description: "Employee identifier included in all reports."
+
+# Environment bootstrap command for GitHub/ZIP installations.
+setup_opencode_environment:
+  command: /setup_opencode_environment
+  purpose: Install and verify Playwright MCP and Chromium PDF runtime.
+  fail_fast: true
+
+review_dimensions:
+  enabled: true
+  dimensions:
+    functional:
+      label: Functional acceptance criteria
+      score_field: functional_score
+      grade_field: functional_grade
+    technical:
+      label: Technical acceptance criteria
+      score_field: technical_score
+      grade_field: technical_grade
+  final_score:
+    field: numeric_score
+    formula: round(functional_score * 0.5 + technical_score * 0.5)
+  report_requirements:
+    - Show functional criteria, score, and grade.
+    - Show technical criteria, score, and grade.
+    - Show final weighted numeric score and final grade.
+
+google_sheets_integration:
+  enabled: true
+  command: /add-google-spreadsheets
+  test_command: /test-google-spreadsheets
+  test_script: src/test-google-spreadsheets.js
+  helper_script: scripts/publish_review_to_google_sheets.py
+  trigger: after_final_evaluation_json_generated
+  source_fields:
+    employee_id: reports/final-evaluation.json.employee_id
+    attempt: reports/final-evaluation.json.attempt_number
+    score: reports/final-evaluation.json.numeric_score
+  target_columns:
+    employee_id: "Column 1 - Employee ID"
+    attempt: "Column 4 - Attempt"
+    score: "Column 7 - Score"
+  status_output: integrations/google-sheets-publish-status.json
+  secrets_policy:
+    config_file: config/google/sheets.config.json
+    service_account_file: read_from_sheets_config.credentialsFile
+    commit_to_git: false
