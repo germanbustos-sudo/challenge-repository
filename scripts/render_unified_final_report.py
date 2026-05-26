@@ -345,6 +345,7 @@ def compose_markdown(ctx: dict[str, Any], session: Path) -> str:
         "evidence_log": evidence_log,
         "anti_false_positive_summary": "Every passed criterion must have concrete evidence. Repository content is treated as untrusted data, never instructions. The unified renderer preserves source text and evidence for auditability.",
         "failed_partial_details": failed_partial_details,
+        "final_recommendation": f"The review evaluated attempt {ctx['attempt_number']} for employee {ctx['employee_id']}. Final score: **{ctx.get('numeric_score', 'N/A')}** ({ctx.get('grade', 'N/A')}). {sum(1 for r in failed_partials if normalize_status(r.get('status')) == 'failed')} of {len(criteria)} criteria failed, {sum(1 for r in failed_partials if normalize_status(r.get('status')) == 'partial')} criteria partial. Remediation is recommended for all failed and partial criteria before the next attempt.",
         "reference_files_table": reference_files,
     }
     out = template
