@@ -349,26 +349,8 @@ def build_skill_profile(file_base: Path, output_session: Path | None = None, rol
     }
     confidence = round(sum(1 for ok in confidence_factors.values() if ok) / len(confidence_factors), 2)
 
-    # Compatibility aliases: older/final renderers may look for `skills`,
-    # `agent_skills`, or `domain_skills`, while the canonical schema uses
-    # `skills_required_raw` and `domain_skill_lenses`. Keep all aliases in
-    # sync so section 12/13 templates always have deterministic skill data.
-    compatibility_skills = []
-    for item in base_skills:
-        compatibility_skills.append({
-            "name": item.get("skill"),
-            "skill": item.get("skill"),
-            "review_focus": item.get("review_focus", []),
-            "evidence_expectations": item.get("evidence_expectations", []),
-            "description": "; ".join(item.get("review_focus", [])) if isinstance(item.get("review_focus"), list) else item.get("review_focus", ""),
-            "evidence_checked": "; ".join(item.get("evidence_expectations", [])) if isinstance(item.get("evidence_expectations"), list) else item.get("evidence_expectations", ""),
-            "evidence_missing": "See failed and partial criteria in the acceptance matrix.",
-            "influenced_dimensions": "Functional, Technical",
-            "risk_notes": item.get("risk_if_missing") or "See risk register.",
-        })
-
     return {
-        "schema_version": "1.2",
+        "schema_version": "1.1",
         "orchestrator_version": VERSION,
         "generated_at": now(),
         "source_file": str(file_base),
@@ -381,12 +363,6 @@ def build_skill_profile(file_base: Path, output_session: Path | None = None, rol
         "criteria_extraction": extraction,
         "challenge_summary": summary,
         "skills_required_raw": skills_required,
-        # Compatibility fields for final report renderers and downstream tools.
-        # Canonical detailed skills remain in `domain_skill_lenses`.
-        "skills": compatibility_skills,
-        "agent_skills": compatibility_skills,
-        "domain_skills": compatibility_skills,
-        "extracted_skills": skills_required,
         "resources_raw": resources,
         "universal_specialist_contract": {
             "agent": "universal-specialist",

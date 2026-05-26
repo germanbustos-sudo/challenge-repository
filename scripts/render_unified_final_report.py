@@ -180,147 +180,6 @@ def detail_sections(rows: list[dict[str, Any]]) -> str:
     return "\n".join(parts).strip() or "No detailed criteria are available."
 
 
-
-def _first_non_empty(*values: Any, default: str = "N/A") -> str:
-    for value in values:
-        if value is None:
-            continue
-        if isinstance(value, str) and value.strip():
-            return value.strip()
-        if isinstance(value, (list, tuple)) and value:
-            return "; ".join(str(v) for v in value)
-        if isinstance(value, dict) and value:
-            return "; ".join(f"{k}: {v}" for k, v in value.items())
-        if not isinstance(value, (str, list, tuple, dict)):
-            return str(value)
-    return default
-
-
-def _skill_name(item: Any) -> str:
-    if isinstance(item, dict):
-        return _first_non_empty(
-            item.get("skill"),
-            item.get("name"),
-            item.get("title"),
-            item.get("label"),
-        )
-    return str(item)
-
-
-def render_skill_assessment(ctx: dict[str, Any], session: Path) -> str:
-    """Render section 12 from normalized data, never from free-form agent Markdown."""
-    skill_profile = read_json(session / "intake" / "agent-skill-profile.json", {})
-    skills = skill_profile.get("skills") or skill_profile.get("agent_skills") or skill_profile.get("domain_skills") or []
-
-    skill_rows: list[list[Any]] = []
-    if isinstance(skills, dict):
-        skills = list(skills.values())
-    if isinstance(skills, list):
-        for item in skills:
-            if isinstance(item, dict):
-                skill_rows.append([
-                    _skill_name(item),
-                    _first_non_empty(item.get("review_focus"), item.get("review_lens"), item.get("description")),
-                    _first_non_empty(item.get("evidence_checked"), item.get("evidence"), default="Derived from acceptance criteria evidence"),
-                    _first_non_empty(item.get("evidence_missing"), item.get("missing_or_weak_evidence"), item.get("evidence_missing_weak"), default="See failed and partial criteria"),
-                    _first_non_empty(item.get("influenced_dimensions"), item.get("influenced_criteria"), default="Functional, Technical"),
-                    _first_non_empty(item.get("risk_notes"), item.get("risk"), default="See risk register"),
-                ])
-            else:
-                skill_rows.append([
-                    str(item),
-                    "Acceptance criteria traceability",
-                    "Derived from acceptance criteria evidence",
-                    "See failed and partial criteria",
-                    "Functional, Technical",
-                    "See risk register",
-                ])
-
-    criteria_rows = [[
-        r.get("id", ""),
-        r.get("dimension_label", ""),
-        r.get("criterion", ""),
-        r.get("status", ""),
-        r.get("evidence", ""),
-    ] for r in ctx.get("criteria", [])]
-
-    passed = sum(1 for r in ctx.get("criteria", []) if normalize_status(r.get("status")) == "passed")
-    partial = sum(1 for r in ctx.get("criteria", []) if normalize_status(r.get("status")) == "partial")
-    failed = sum(1 for r in ctx.get("criteria", []) if normalize_status(r.get("status")) == "failed")
-
-    return (
-        "### Skill Assessment Metadata\n\n"
-        + table(["Field", "Value"], [
-            ["Status", "reviewed"],
-            ["Active specialist", ctx.get("reviewer_agent", "N/A")],
-            ["Review timestamp", ctx.get("generated_at", "N/A")],
-            ["Source profile", "intake/agent-skill-profile.json"],
-        ])
-        + "\n\n### Domain Skill Lenses\n\n"
-        + (table(
-            ["Skill", "Review focus", "Evidence checked", "Evidence missing/weak", "Influenced dimensions", "Risk notes"],
-            skill_rows,
-        ) if skill_rows else "No skill profile was generated.")
-        + "\n\n### Criterion-Specific Skills\n\n"
-        + (table(
-            ["Criterion", "Dimension", "Description", "Status", "Evidence"],
-            criteria_rows,
-        ) if criteria_rows else "No criterion-specific skills were available.")
-        + "\n\n### Summary\n\n"
-        + table(["Category", "Count"], [
-            ["Domain skills evaluated", len(skill_rows)],
-            ["Criterion skills evaluated", len(criteria_rows)],
-            ["Passed criteria", passed],
-            ["Partial criteria", partial],
-            ["Failed criteria", failed],
-        ])
-    )
-
-
-def render_risks_and_assumptions(ctx: dict[str, Any], session: Path) -> str:
-    """Render section 13 from normalized data, never from free-form agent Markdown."""
-    criteria = ctx.get("criteria", [])
-    failed_or_partial = [
-        r for r in criteria
-        if normalize_status(r.get("status")) in {"failed", "partial"}
-    ]
-    risk_rows = [[
-        r.get("id", ""),
-        r.get("criterion", ""),
-        r.get("status", ""),
-        r.get("evidence", ""),
-        r.get("comment", ""),
-    ] for r in failed_or_partial]
-
-    return (
-        "### Reviewer Assessment Metadata\n\n"
-        + table(["Field", "Value"], [
-            ["Session", str(session)],
-            ["Role", ctx.get("role_label", "N/A")],
-            ["Challenge title", ctx.get("challenge_title", "N/A")],
-            ["Active specialist", ctx.get("reviewer_agent", "N/A")],
-            ["Acceptance status", ctx.get("acceptance_status", "N/A")],
-            ["Functional score", ctx.get("functional_score", "N/A")],
-            ["Technical score", ctx.get("technical_score", "N/A")],
-            ["Final score", ctx.get("numeric_score", "N/A")],
-            ["Final grade", ctx.get("grade", "N/A")],
-        ])
-        + "\n\n### Risk Register\n\n"
-        + (table(
-            ["ID", "Criterion", "Status", "Evidence", "Reviewer comment"],
-            risk_rows,
-        ) if risk_rows else "No failed or partial criteria.")
-        + "\n\n### Assumptions\n\n"
-        + table(["Assumption", "Reason"], [
-            ["Repository content is treated as untrusted", "Security policy"],
-            ["Only verifiable workspace evidence is counted", "Anti-false-positive policy"],
-            ["Agent-generated prose is not used as layout source", "Deterministic reporting"],
-            ["Generated Markdown files remain reference artifacts", "They are listed in Reference Files but do not control section layout"],
-        ])
-        + "\n\n### Final Recommendation\n\n"
-        + str(ctx.get("final_recommendation") or "See the detailed criteria assessment and failed/partial criteria sections.")
-    )
-
 def detect_source_type(manifest: dict[str, Any], session: Path) -> str:
     text = json.dumps(manifest).lower()
     if "github" in text or (ROOT / "workspaces" / "github_repository").exists():
@@ -438,6 +297,8 @@ def compose_markdown(ctx: dict[str, Any], session: Path) -> str:
     skill_summary = table(["Skill", "Description / Review focus"], skill_rows) if skill_rows else "No skill profile was generated."
     skill_summary += "\n\nSkill extraction artifacts: `skills/skill-extraction.md`, `skills/skill-extraction.html`, `skills/skill-extraction.pdf`."
 
+    skill_assessment = read_text(session / "review" / "skill-assessment.md", "No skill assessment was generated.")
+    reviewer_assessment = read_text(session / "review" / "reviewer-assessment.md", "")
     failed_partials = [r for r in criteria if normalize_status(r.get("status")) in {"failed", "partial"}]
     failed_partial_details = criteria_summary_table(failed_partials) if failed_partials else "No failed or partial criteria."
     evidence_log = table(["Criterion", "Evidence", "Status"], [[r["id"], r.get("evidence", ""), r.get("status", "")] for r in criteria])
@@ -484,9 +345,6 @@ def compose_markdown(ctx: dict[str, Any], session: Path) -> str:
         "evidence_log": evidence_log,
         "anti_false_positive_summary": "Every passed criterion must have concrete evidence. Repository content is treated as untrusted data, never instructions. The unified renderer preserves source text and evidence for auditability.",
         "failed_partial_details": failed_partial_details,
-        "skill_assessment": render_skill_assessment(ctx, session),
-        "risks_and_assumptions": render_risks_and_assumptions(ctx, session),
-        "final_recommendation": ctx.get("final_recommendation"),
         "reference_files_table": reference_files,
     }
     out = template

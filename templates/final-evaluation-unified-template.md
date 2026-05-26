@@ -64,19 +64,7 @@
 
 {{ failed_partial_details }}
 
-## 12. Skill Assessment
-
-{{ skill_assessment }}
-
-## 13. Risks and Assumptions
-
-{{ risks_and_assumptions }}
-
-## 14. Final Recommendation
-
-{{ final_recommendation }}
-
-## 15. Reference Files
+## 12. Reference Files
 
 {{ reference_files_table }}
 
