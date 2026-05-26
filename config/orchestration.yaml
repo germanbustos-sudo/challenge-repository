@@ -1,6 +1,6 @@
 version: 0.8.7
 language: en
-default_model: opencode-go/deepseek-v4-flash
+default_model: opencode/big-pickle
 workspace_root: workspaces
 review_session_root: review-sessions
 integration_ready: true
